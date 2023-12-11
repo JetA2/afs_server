@@ -36,8 +36,8 @@ def disk_exists(disk):
 def mount(image):
     # Check if image is already mounted
     try:
-        sh.mountpoint(_MOUNT_POINT, '-q')
-    except sh.ErrorReturnCode_32:
+        sh.grep('-q', _MOUNT_POINT, _in=sh.mount())
+    except sh.ErrorReturnCode_1:
         sh.mount(image, _MOUNT_POINT, '-o', 'users,umask=000')
 
 
