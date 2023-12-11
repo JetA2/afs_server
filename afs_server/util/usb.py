@@ -1,11 +1,13 @@
 import os.path
 import errno
+import sh
 
 from util import local
 
 _USB_IMAGE_PATH = '/home/floppy_disk/usb_device.bin'
 _FILE_LIST_PATH = '/home/floppy_disk/file_list.txt'
 _INSERTED_DISK_FILE_PATH = '/home/floppy_disk/inserted.txt'
+_MSD_MODULE = 'g_mass_storage'
 
 
 def initialize():
@@ -82,13 +84,20 @@ def eject_disk():
 
 
 def _usb_device_created():
-    # TODO: Check if USB mass storage device is created
-    return os.path.isfile(_INSERTED_DISK_FILE_PATH)
+    try:
+        sh.grep('-q', _MSD_MODULE, _in=sh.lsmod())
+        return True
+    except sh.ErrorReturnCode_1:
+        return False
 
 
 def _create_usb_device():
-    pass
+    sh.modprobe(_MSD_MODULE,
+                'file=' + _USB_IMAGE_PATH,
+                'removable=1',
+                'ro=0',
+                'stall=0')
 
 
 def _remove_usb_device():
-    pass
+    sh.modprobe('-r', _MSD_MODULE)
