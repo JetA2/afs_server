@@ -84,6 +84,8 @@ async def main():
                                       host='0.0.0.0',
                                       port=SERVER_PORT)
 
+    print('Server started!', flush=True)
+
     # Wait for shutdown
     shutdown_command = loop.create_future()
 
