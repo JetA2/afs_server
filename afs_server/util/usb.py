@@ -4,9 +4,9 @@ import sh
 
 from util import local
 
-_USB_IMAGE_PATH = '/home/floppy_disk/usb_device.bin'
-_FILE_LIST_PATH = '/home/floppy_disk/file_list.txt'
-_INSERTED_DISK_FILE_PATH = '/home/floppy_disk/inserted.txt'
+_USB_IMAGE_PATH = '/mnt/storage/usb_device.bin'
+_FILE_LIST_PATH = '/root/afs/file_list.txt'
+_INSERTED_DISK_FILE_PATH = '/root/afs/inserted.txt'
 _MSD_MODULE = 'g_mass_storage'
 
 
