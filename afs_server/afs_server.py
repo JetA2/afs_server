@@ -80,7 +80,6 @@ async def main():
 
     # Start server
     server = await loop.create_server(lambda: ServerProtocol(),
-                                      # family=socket.AF_INET6,  # Accept both v4 and v6 connections
                                       host='0.0.0.0',
                                       port=SERVER_PORT)
 
