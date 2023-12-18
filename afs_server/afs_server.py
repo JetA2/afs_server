@@ -14,14 +14,6 @@ class ServerProtocol(asyncio.Protocol):
     def connection_made(self, transport):
         self.transport = transport
 
-        # Send connection response
-        try:
-            inserted_disk = usb.get_inserted_disk()
-            network.send_response(
-                self.transport, '' if inserted_disk == None else inserted_disk)
-        except Exception as e:
-            network.send_error(self.transport, str(e))
-
         # Close connection if no request is received within a time period
         loop = asyncio.get_running_loop()
         self.request_timer = loop.call_later(
@@ -35,7 +27,11 @@ class ServerProtocol(asyncio.Protocol):
             # Handle request
             request, args = network.parse_request(data)
 
-            if (request == network.GET_FILE_LIST):
+            if (request == network.GET_INSERTED_DISK):
+                inserted_disk = usb.get_inserted_disk()
+                network.send_response(
+                    self.transport, '' if inserted_disk == None else inserted_disk)
+            elif (request == network.GET_FILE_LIST):
                 file_list = local.get_file_list()
                 network.send_response(self.transport, *file_list)
             elif (request == network.INSERT_DISK):

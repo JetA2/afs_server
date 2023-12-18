@@ -1,3 +1,4 @@
+GET_INSERTED_DISK = 'GET_INSERTED_DISK'
 GET_FILE_LIST = 'GET_FILE_LIST'
 INSERT_DISK = 'INSERT_DISK'
 EJECT_DISK = 'EJECT_DISK'
@@ -26,7 +27,9 @@ def parse_request(data):
     else:
         args = None
 
-    if (message == GET_FILE_LIST):
+    if (message == GET_INSERTED_DISK):
+        request = GET_INSERTED_DISK
+    elif (message == GET_FILE_LIST):
         request = GET_FILE_LIST
     elif (message == INSERT_DISK):
         request = INSERT_DISK
