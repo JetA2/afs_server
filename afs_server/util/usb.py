@@ -4,7 +4,7 @@ import sh
 
 from util import local
 
-_USB_IMAGE_PATH = '/mnt/storage/usb_device.bin'
+_USB_IMAGE_PATH = '/root/afs/usb_device.bin'
 _FILE_LIST_PATH = '/root/afs/file_list.txt'
 _INSERTED_DISK_FILE_PATH = '/root/afs/inserted.txt'
 _MSD_MODULE = 'g_mass_storage'
