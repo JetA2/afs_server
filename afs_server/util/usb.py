@@ -1,20 +1,68 @@
 import os.path
 import errno
+import random
 import sh
+import wave
+import alsaaudio
 
 from util import local
 
 _USB_IMAGE_PATH = '/root/afs/usb_device.bin'
 _FILE_LIST_PATH = '/root/afs/file_list.txt'
 _INSERTED_DISK_FILE_PATH = '/root/afs/inserted.txt'
+_SOUND_DIRECTORY = '/root/afs/sound'
 _MSD_MODULE = 'g_mass_storage'
+# _MSD_MODULE = 'crc7'  # Use for testing on systems without g_mass_storage
+
+_ALSA_PERIOD_COUNT = 2
+_ALSA_PERIOD_SIZE = 4096
+
+_sound_device = None
+_sound_insert = []
+_sound_eject = []
 
 
 def initialize():
+    global _sound_device
+
     # Handle the case where the computer was reset while a disk
     # was still inserted.
     if (not _usb_device_created()):
         eject_disk()
+
+    # Read sounds (all files must be of the same format)
+    file_list = [entry for entry in os.scandir(
+        _SOUND_DIRECTORY) if not entry.is_dir()]
+
+    for entry in file_list:
+        with wave.open(entry.path, 'rb') as file:
+            frames = file.readframes(file.getnframes())
+
+            if (entry.name.startswith('insert')):
+                _sound_insert.append(frames)
+            elif (entry.name.startswith('eject')):
+                _sound_eject.append(frames)
+
+            if (_sound_device == None):
+                # Setup sound device
+                format = None
+
+                if file.getsampwidth() == 1:
+                    format = alsaaudio.PCM_FORMAT_U8
+                elif file.getsampwidth() == 2:
+                    format = alsaaudio.PCM_FORMAT_S16_LE
+                elif file.getsampwidth() == 3:
+                    format = alsaaudio.PCM_FORMAT_S24_3LE
+                elif file.getsampwidth() == 4:
+                    format = alsaaudio.PCM_FORMAT_S32_LE
+                else:
+                    raise ValueError('Unsupported sound format', format)
+
+                _sound_device = alsaaudio.PCM(channels=file.getnchannels(),
+                                              rate=file.getframerate(),
+                                              format=format,
+                                              periods=_ALSA_PERIOD_COUNT,
+                                              periodsize=_ALSA_PERIOD_SIZE)
 
 
 def get_inserted_disk():
@@ -92,6 +140,7 @@ def _usb_device_created():
 
 
 def _create_usb_device():
+    _play_sound(random.choice(_sound_insert))
     sh.modprobe(_MSD_MODULE,
                 'file=' + _USB_IMAGE_PATH,
                 'removable=1',
@@ -101,3 +150,13 @@ def _create_usb_device():
 
 def _remove_usb_device():
     sh.modprobe('-r', _MSD_MODULE)
+    _play_sound(random.choice(_sound_eject))
+
+
+def _play_sound(frames):
+    try:
+        _sound_device.write(frames)
+    except SystemError as e:
+        pass  # TODO: needed until fix for https://github.com/larsimmisch/pyalsaaudio/issues/137
+
+    _sound_device.drain()
