@@ -1,120 +1,27 @@
-# Buildroot
+# Amiga Floppy Selector
 
-Buildroot base:
-https://github.com/sirsipe/buildroot-externals/tree/main (rpi-wifi, floppy_sound)
+This project transforms a Raspberry Pi Zero W into an intelligent USB stick that can be used with the [FlashFloppy](https://github.com/keirf/flashfloppy) emulator software to change emulated floppy disks on an Amiga. The Pi mounts itself as a USB Mass Storage Device which to FlashFloppy looks like a USB stick with a single disk image. A simple server is running on the Pi to enable an external application to change disks over Wi-Fi. For extra nostalgia, authentic Amiga 500 insert and eject sounds are played in response to commands if a speaker is attached to the Pi.
 
-make BR2_EXTERNAL=../buildroot-externals:/mnt/Development/Source/Projects/AmigaFloppySelector/floppy_sound menuconfig
+## Network protocol
 
-Hostname:
-floppy
+The protocol relies on messages terminated by `\n`. The message content must be URL encoded with a scheme compatible with Python's `urllib.parse.quote_plus`. The network connection is closed after each response, or if no command was received within a time period.
 
-Root password:
-root
+### Commands
 
-Extra target packages:
+- `GET_INSERTED_DISK` - Returns the file name of the currently inserted disk image.
+- `GET_FILE_LIST` - Returns a list of all disk image files available on the server, separated by `\n`.
+- `INSERT_DISK file_name` - Inserts the disk image named `file_name`.
+- `EJECT_DISK` - Ejects the currently inserted disk image.
 
-python3
-│ -> Target packages
-│ -> Interpreter languages and scripting
+### Response format
 
-python-sh
-python-alsaaudio
-│ -> Target packages  
-│ -> Interpreter languages and scripting
-│ -> python3 (BR2_PACKAGE_PYTHON3 [=y])
-│ -> External python modules
+- `OK[\nPayload]` - Successful response with optional payload.
+- `ERROR[\nMessage]` - Error response with optional error message.
 
-libgpiod
-│ -> Target packages
-│ -> Libraries
-│ -> Hardware handling
+## Operating system
 
-ntp (sntp, ntpd)
-│ -> Target packages
-│ -> Networking applications
+The project uses [Buildroot](https://buildroot.org) to create a fast-booting experience.
 
-raspi-gpio
-│ -> Target packages  
-│ -> Hardware handling
+## Hardware
 
-alsa-utils (all)
-│ -> Target packages  
-│ -> Audio and video applications
-
-# config.txt
-
-start_file=start.elf
-fixup_file=fixup.dat
-kernel=zImage
-boot_delay=0
-avoid_safe_mode=1
-disable_splash=1
-dtoverlay=dwc2
-dtoverlay=audremap,pins_18_19
-
-# cmdline.txt
-
-root=/dev/mmcblk0p2 rootwait quiet console=tty1
-
-**_ After first boot _**
-
-# Install the AFS server
-
-mkdir /root/afs
-Copy the "afs_server" directory into the "afs" directory
-Copy the floppy motor step sound file to the "afs" directory
-
-# Partition the rest of the SD card
-
-fdisk -l (List current partitions)
-fdisk /dev/mmcblk0 (Substitute actual device)
-Enter 'n' for new partition
-Enter 'p' for primary partition
-Enter next available partition number
-Press 'Enter' for default partition start
-Press 'Enter' to use all remaining space
-Enter 'w' to save changes and exit
-
-Reboot
-
-mke2fs /dev/mmcblk0p3 (Substitute actual partition)
-
-# Mount the storage partition
-
-mkdir /mnt/storage
-mount /dev/mmcblk0p3 /mnt/storage
-
-# Create USB device image
-
-dd bs=1M if=/dev/zero of=/mnt/storage/usb_device.bin count=16384 (16 GB image)
-mkdosfs /mnt/storage/usb_device.bin -F 32 -I
-
-# Mount the USB device image
-
-mkdir /mnt/usb_device
-mount /mnt/storage/usb_device.bin /mnt/usb_device -o users,umask=000
-
-# Create the USB device file tree
-
-mkdir /mnt/usb_device/FF
-Copy the FF.CFG file to /mnt/usb_device/FF
-
-# Update /etc/fstab
-
-/dev/mmcblk0p3 /mnt/storage ext2 defaults 0 0
-/mnt/storage/usb_device.bin /mnt/usb_device vfat users,umask=000 0 0
-
-# Enable dwc2 and sound at boot
-
-Update /etc/inittab:
-After "::sysinit:/sbin/modprobe brcmfmac", add
-::sysinit:/sbin/modprobe dwc2
-::sysinit:/sbin/modprobe snd_bcm2835
-
-# Start AFS server at boot
-
-Update /etc/inittab:
-After "::sysinit:/etc/init.d/rcS", add
-::sysinit:/root/afs/start.sh
-
-**_ Reboot _**
+![Hardware](hardware.jpeg)
