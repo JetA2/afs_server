@@ -157,6 +157,8 @@ def _play_sound(frames):
     try:
         _sound_device.write(frames)
     except SystemError as e:
-        pass  # TODO: needed until fix for https://github.com/larsimmisch/pyalsaaudio/issues/137
+        # TODO: needed until fix for https://github.com/larsimmisch/pyalsaaudio/issues/137
+        # has been included in buildroot (pyalsaaudio 0.11.0)
+        pass
 
     _sound_device.drain()
