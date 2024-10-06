@@ -32,7 +32,7 @@ class ServerProtocol(asyncio.Protocol):
                     self.transport, '' if inserted_disk == None else inserted_disk)
             elif (request == network.GET_FILE_LIST):
                 file_list = local.get_file_list()
-                network.send_response(self.transport, *file_list)
+                network.send_response(self.transport, '\n'.join(file_list))
             elif (request == network.INSERT_DISK):
                 if (args != None):
                     usb.insert_disk(args)

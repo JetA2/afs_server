@@ -1,22 +1,31 @@
+import urllib.parse
+
 GET_INSERTED_DISK = 'GET_INSERTED_DISK'
 GET_FILE_LIST = 'GET_FILE_LIST'
 INSERT_DISK = 'INSERT_DISK'
 EJECT_DISK = 'EJECT_DISK'
 
 
-def send_response(transport, *lines):
-    _write_line(transport, 'OK')
+def send_response(transport, response=''):
+    message = 'OK'
 
-    for line in lines:
-        _write_line(transport, line)
+    if (len(response) > 0):
+        message += ('\n' + response)
+
+    _write_message(transport, message)
 
 
 def send_error(transport, *error):
-    _write_line(transport, ' '.join(part for part in error))
+    message = 'ERROR'
+
+    if (len(error) > 0):
+        message += ('\n' + ' '.join(part for part in error))
+
+    _write_message(transport, message)
 
 
 def parse_request(data):
-    message = data.decode().strip()
+    message = urllib.parse.unquote_plus(data.decode().strip())
     request = None
 
     # Arguments are all text after the first space
@@ -39,7 +48,7 @@ def parse_request(data):
     return request, args
 
 
-def _write_line(transport, line):
-    message = line + '\n'
+def _write_message(transport, message):
+    message = urllib.parse.quote_plus(message) + '\n'
 
     transport.write(message.encode())
