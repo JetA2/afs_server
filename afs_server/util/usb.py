@@ -1,3 +1,11 @@
+#  usb.py
+#  afs_server
+#
+#  Created by Peter Lundkvist on 11/12/2023.
+#
+#  This is free and unencumbered software released into the public domain.
+#  See the file COPYING for more details, or visit <http://unlicense.org>.
+
 import os.path
 import errno
 import random
