@@ -1,6 +1,5 @@
 import asyncio
 import signal
-import socket
 
 from util import local, network, usb
 
