@@ -45,7 +45,7 @@ class ServerProtocol(asyncio.Protocol):
                 network.send_response(self.transport)
             else:
                 network.send_error(
-                    self.transport, 'Unknown request:', data.decode())
+                    self.transport, 'Invalid request:', data.decode())
         except Exception as e:
             network.send_error(self.transport, str(e))
 
