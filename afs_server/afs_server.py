@@ -6,13 +6,21 @@
 #  This is free and unencumbered software released into the public domain.
 #  See the file COPYING for more details, or visit <http://unlicense.org>.
 
-import asyncio
 import signal
+import asyncio
 
-from util import local, network, usb
+from util import network
 
 SERVER_PORT = 52611
 REQUEST_TIMEOUT = 3  # Seconds
+TESTING = True  # Use for client testing (no sound)
+
+if (TESTING):
+    from util import test as usb
+    from util import test as local
+else:
+    from util import usb
+    from util import local
 
 shutdown_command = None
 
